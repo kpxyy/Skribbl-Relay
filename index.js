@@ -6,6 +6,17 @@ require('dotenv').config();
 
 let URL = process.env.WEBHOOK_URL;
 
+var startedParams = {
+    username: "Skribbl-Relay",
+    embeds: [{
+        title: "System",
+        description: `Relay started`,
+        color: 65280,
+    }]
+}
+
+send(startedParams);
+
 function main() {
     const client = new Client({
         name: "SkribblRelay"
@@ -29,23 +40,59 @@ function main() {
         console.log(`Connected to ${client.lobbyId}\nOnline Players: ${client.players.length}`);
     })
 
-    client.on("disconnect", (reason) => {
-	    var disconnectedParams = {
-            username: "Skribbl-Relay",
-            embeds: [{
-                title: "System",
-                description: `Relay disconnected`,
-                color: 16711680,
-                footer: {
-                    text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
+    client.on("disconnect", (disconnectData) => {
+        if(typeof disconnectData.reason === undefined) {
+            var disconnectedParams = {
+                    username: "Skribbl-Relay",
+                    embeds: [{
+                        title: "System",
+                        description: `Relay disconnected (skribbl's fault)`,
+                        color: 16711680
+                    }]
                 }
-            }]
-        }
+                send(disconnectedParams);
+            }
 
-        send(disconnectedParams);
-        console.log(reason);
-        main();
-    });
+            if(disconnectData.reason === 1) {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Relay disconnected by client`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
+
+            if(disconnectData.reason === 1) {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Relay kicked`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
+
+            if(disconnectData.reason === 2) {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Relay banned`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
+    
+        setTimeout(() => {
+            main();
+        }, 5000)
+     });
 
     client.on("chooseWord", (word) => {
         client.sendMessage(`I am a relay bot, logging chat to discord, I can't draw, here's the word: ${word[0]}`)
