@@ -29,6 +29,32 @@ function main() {
         console.log(`Connected to ${client.lobbyId}\nOnline Players: ${client.players.length}`);
     })
 
+    client.on("disconnect", (reason) => {
+	    var disconnectedParams = {
+            username: "Skribbl-Relay",
+            embeds: [{
+                title: "System",
+                description: `Relay disconnected`,
+                color: 16711680,
+                footer: {
+                    text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
+                }
+            }]
+        }
+
+        send(disconnectedParams);
+        console.log(reason);
+        main();
+    });
+
+    client.on("chooseWord", (word) => {
+        client.sendMessage(`I am a relay bot, logging chat to discord, I can't draw, here's the word: ${word[0]}`)
+
+        setTimeout(() => {
+            client.selectWord(word[0]);
+        }, 1500)
+    });
+
     client.on("chooseWord", (word) => {
         client.sendMessage(`I am a relay bot, logging chat to discord, I can't draw, here's the word: ${word[0]}`)
 
