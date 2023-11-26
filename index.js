@@ -41,7 +41,7 @@ function main() {
     })
 
     client.on("disconnect", (disconnectData) => {
-        if(typeof disconnectData.reason === undefined) {
+        if(disconnectData.reason === undefined) {
             var disconnectedParams = {
                     username: "Skribbl-Relay",
                     embeds: [{
@@ -402,6 +402,8 @@ function main() {
         }
 
         if (packetData.data.id === 6) {
+            if(client.round === 0) return;
+
             var params = {
                 username: "Skribbl-Relay",
                 embeds: [{
