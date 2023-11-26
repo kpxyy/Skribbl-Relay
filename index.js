@@ -53,7 +53,7 @@ function main() {
                 send(disconnectedParams);
             }
 
-            if(disconnectData.reason === 1) {
+            if(disconnectData.reason === 0) {
                 var disconnectedParams = {
                         username: "Skribbl-Relay",
                         embeds: [{
@@ -83,6 +83,102 @@ function main() {
                         embeds: [{
                             title: "System",
                             description: `Relay banned`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
+
+            if(disconnectData.joinErr === 1) {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Room not found`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
+
+            if(disconnectData.joinErr === 2) {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Room is full`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
+
+            if(disconnectData.joinErr === 3) {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Relay on kick cooldown`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
+
+            if(disconnectData.joinErr === 4) {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Relay banned`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
+
+            if(disconnectData.joinErr === 5) {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Relay ratelimited`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
+
+            if(disconnectData.joinErr === 100) {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Relay is already connected`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
+
+            if(disconnectData.joinErr === 200) {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Too many connections`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
+
+            if(disconnectData.joinErr === 300) {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Relay kicked too many times`,
                             color: 16711680
                         }]
                     }
