@@ -19,15 +19,23 @@ function main() {
                 description: `Relay connected`,
                 color: 65280,
                 footer: {
-                    text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
+                    text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
                 }
             }]
         }
 
         send(connectedParams);
 
-        console.log(`Connected to ${client.lobbyId}`);
+        console.log(`Connected to ${client.lobbyId}\nOnline Players: ${client.players.length}`);
     })
+
+    client.on("chooseWord", (word) => {
+        client.sendMessage(`I am a relay bot, logging chat to discord, I can't draw, here's the word: ${word[0]}`)
+
+        setTimeout(() => {
+            client.selectWord(word[0]);
+        }, 1500)
+    });
 
     client.on("playerJoin", (userJoin) => {
         var params = {
@@ -37,7 +45,7 @@ function main() {
                 description: `**${userJoin.name}** joined the room!`,
                 color: 65280,
                 footer: {
-                    text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
+                    text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
                 }
             }]
         }
@@ -53,7 +61,7 @@ function main() {
                     description: `**${userLeave.player.name}** left the room!`,
                     color: 16711680,
                     footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
+                        text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
                     }
                 }]
             }
@@ -68,7 +76,7 @@ function main() {
                     description: `**${userLeave.player.name}** has been kicked.`,
                     color: 16711680,
                     footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
+                        text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
                     }
                 }]
             }
@@ -83,7 +91,7 @@ function main() {
                     description: `**${userLeave.player.name}** has been banned.`,
                     color: 16711680,
                     footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
+                        text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relayy`
                     }
                 }]
             }
@@ -118,7 +126,7 @@ function main() {
                     description: `Waiting For Players`,
                     color: 16754756,
                     footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
+                        text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
                     }
                 }]
             }
@@ -249,7 +257,7 @@ function main() {
                     description: `The host needs atleast **2** players to start the game`,
                     color: 16711680,
                     footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
+                        text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
                     }
                 }]
             }
@@ -351,7 +359,7 @@ function main() {
     })
 
     client.on("text", (relay) => {
-        if (relay.player.name === client.options.name) return;
+        // if (relay.player.name === client.options.name) return;
 
         if (relay.msg.includes("@everyone") || relay.msg.includes("@here")) return;
 
