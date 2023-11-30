@@ -11,7 +11,7 @@ var startedParams = {
     embeds: [{
         title: "System",
         description: `Relay started`,
-        color: 65280,
+        color: 65280
     }]
 }
 
@@ -19,7 +19,7 @@ send(startedParams);
 
 function main() {
     const client = new Client({
-        name: "SkribblRelay"
+        name: "Skribbl Relay"
     });
 
     client.on("connect", () => {
@@ -40,30 +40,25 @@ function main() {
         console.log(`Connected to ${client.lobbyId}\nOnline Players: ${client.players.length}`);
     })
 
-    client.on("disconnect", (disconnectData) => {
-        if(disconnectData.reason === undefined) {
-            var disconnectedParams = {
-                    username: "Skribbl-Relay",
-                    embeds: [{
-                        title: "System",
-                        description: `Relay disconnected (skribbl's fault)`,
-                        color: 16711680
-                    }]
-                }
-                send(disconnectedParams);
-            }
+    client.on("voteKick", (data) => {
+        var params = {
+            username: "Skribbl-Relay",
+            embeds: [{
+                title: "System",
+                description: `${data.voter.name} is voting to kick ${data.votee.name} (${data.currentVotes}/${data.requiredVotes})`,
+                color: 14863104
+            }]
+        }
+        send(params);
+    })
 
-            if(disconnectData.reason === 0) {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Relay disconnected by client`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            }
+    client.on("disconnect", (disconnectData) => {
+            console.log(disconnectData);
+            clearInterval(i);
+
+            setTimeout(() => {
+                main();
+            }, 5000)
 
             if(disconnectData.reason === 1) {
                 var disconnectedParams = {
@@ -99,9 +94,7 @@ function main() {
                         }]
                     }
                 send(disconnectedParams);
-            }
-
-            if(disconnectData.joinErr === 2) {
+            } else if(disconnectData.joinErr === 2) {
                 var disconnectedParams = {
                         username: "Skribbl-Relay",
                         embeds: [{
@@ -111,9 +104,7 @@ function main() {
                         }]
                     }
                 send(disconnectedParams);
-            }
-
-            if(disconnectData.joinErr === 3) {
+            } else if(disconnectData.joinErr === 3) {
                 var disconnectedParams = {
                         username: "Skribbl-Relay",
                         embeds: [{
@@ -123,9 +114,7 @@ function main() {
                         }]
                     }
                 send(disconnectedParams);
-            }
-
-            if(disconnectData.joinErr === 4) {
+            } else if(disconnectData.joinErr === 4) {
                 var disconnectedParams = {
                         username: "Skribbl-Relay",
                         embeds: [{
@@ -135,9 +124,7 @@ function main() {
                         }]
                     }
                 send(disconnectedParams);
-            }
-
-            if(disconnectData.joinErr === 5) {
+            } else if(disconnectData.joinErr === 5) {
                 var disconnectedParams = {
                         username: "Skribbl-Relay",
                         embeds: [{
@@ -147,9 +134,7 @@ function main() {
                         }]
                     }
                 send(disconnectedParams);
-            }
-
-            if(disconnectData.joinErr === 100) {
+            } else if(disconnectData.joinErr === 100) {
                 var disconnectedParams = {
                         username: "Skribbl-Relay",
                         embeds: [{
@@ -159,9 +144,7 @@ function main() {
                         }]
                     }
                 send(disconnectedParams);
-            }
-
-            if(disconnectData.joinErr === 200) {
+            } else if(disconnectData.joinErr === 200) {
                 var disconnectedParams = {
                         username: "Skribbl-Relay",
                         embeds: [{
@@ -171,9 +154,7 @@ function main() {
                         }]
                     }
                 send(disconnectedParams);
-            }
-
-            if(disconnectData.joinErr === 300) {
+            } else if(disconnectData.joinErr === 300) {
                 var disconnectedParams = {
                         username: "Skribbl-Relay",
                         embeds: [{
@@ -183,11 +164,80 @@ function main() {
                         }]
                     }
                 send(disconnectedParams);
+            } else {
+                if(typeof disconnectData.joinErr === undefined) return;
+                if(disconnectData.joinErr === undefined) return;
+
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Undefined if joinErr call: ${disconnectData.joinErr}`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
             }
-    
-        setTimeout(() => {
-            main();
-        }, 5000)
+
+            if(disconnectData.transportDisconnectReason === 'io client disconnect') {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Relay was disconnected by client`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
+
+            if(disconnectData.transportDisconnectReason === 'io server disconnect') {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Relay was disconnected by server`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
+
+            if(disconnectData.transportDisconnectReason === 'transport close') {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Relay was disconnected due to a transport close`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
+
+            if(disconnectData.transportDisconnectReason === 'transport error') {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Relay was disconnected due to a transport error`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
+
+            if(disconnectData.transportDisconnectReason === 'ping timeout') {
+                var disconnectedParams = {
+                        username: "Skribbl-Relay",
+                        embeds: [{
+                            title: "System",
+                            description: `Relay was disconnected due to a ping timeout`,
+                            color: 16711680
+                        }]
+                    }
+                send(disconnectedParams);
+            }
      });
 
     client.on("chooseWord", (word) => {
@@ -530,7 +580,7 @@ function main() {
     })
 
     client.on("text", (relay) => {
-        // if (relay.player.name === client.options.name) return;
+        if (relay.player.name === client.options.name) return;
 
         if (relay.msg.includes("@everyone") || relay.msg.includes("@here")) return;
 
