@@ -40,7 +40,7 @@ function main() {
         console.log(`Connected to ${client.lobbyId}\nOnline Players: ${client.players.length}`);
     })
 
-    client.on("voteKick", (data) => {
+    client.on("votekick", (data) => {
         var params = {
             username: "Skribbl-Relay",
             embeds: [{
