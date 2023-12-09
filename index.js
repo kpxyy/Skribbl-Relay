@@ -4,8 +4,6 @@ require("dotenv").config();
 
 let { WEBHOOK_URL: URL } = process.env;
 
-require("./server.js");
-
 if (!URL) {
   console.error("You must include a URL in the .env file.");
   process.exit(0);
