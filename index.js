@@ -1,656 +1,382 @@
 const {
-    Client
+  Client
 } = require("skribbler");
 
 require('dotenv').config();
 
-let URL = process.env.WEBHOOK_URL;
+let { WEBHOOK_URL: URL } = process.env;
 
-var startedParams = {
-    username: "Skribbl-Relay",
-    embeds: [{
-        title: "System",
-        description: `Relay started`,
-        color: 65280
-    }]
+if(!URL) {
+  console.error("You must include a URL in the .env file.");
+  process.exit(0);
 }
 
-send(startedParams);
+send({
+  username: "Skribbl-Relay",
+  embeds: [{
+    title: "System",
+    description: "Relay started",
+    color: 65280
+  }]
+});
 
 function main() {
-    const client = new Client({
-        name: "Skribbl Relay"
+  const client = new Client({
+    name: "Skribbl Relay"
+  });
+
+  client.on("connect", () => {
+    send({
+      username: "Skribbl-Relay",
+      embeds: [{
+        title: "System",
+        description: "Relay connected",
+        color: 65280,
+        footer: {
+          text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
+        }
+      }]
     });
 
-    client.on("connect", () => {
-        var connectedParams = {
+    console.log(`Connected to ${client.lobbyId}\nOnline Players: ${client.players.length}`);
+  })
+
+  client.on("votekick", ({voter, votee, currentVotes, requiredVotes}) => {
+    send({
+      username: "Skribbl-Relay",
+      embeds: [{
+        title: "System",
+        description: `${voter.name} is voting to kick ${votee.name} (${currentVotes}/${requiredVotes})`,
+        color: 14863104
+      }]
+    });
+  })
+
+  client.on("disconnect", (disconnectData) => {
+    console.log(disconnectData);
+
+    setTimeout(() => {
+      main();
+    }, 1670)
+
+    const disconnectedParams = {
+      username: "Skribbl-Relay",
+      embeds: [{
+        title: "System",
+        description: "",
+        color: 16711680
+      }]
+    }
+
+    switch(disconnectData.reason) {
+      case 1:
+        disconnectedParams.embeds[0].description = "Relay kicked";
+        break;
+
+      case 2:
+        disconnectedParams.embeds[0].description = "Relay banned";
+        
+      default:
+        if(!disconnectData.reason) break;
+
+        disconnectedParams.embeds[0].description = `undefined reason: ${disconnectData.reason}`;
+    };
+
+    switch(disconnectData.joinErr) {
+      case 1:
+        disconnectedParams.embeds[0].description = "Room not found";
+        break;
+
+      case 2:
+        disconnectedParams.embeds[0].description = "Room is full";
+        break;
+
+      case 3:
+        disconnectedParams.embeds[0].description = "Relay on kick cooldown";
+        break;
+
+      case 4:
+        disconnectedParams.embeds[0].description = "Relay banned";
+        break;
+
+      case 5:
+        disconnectedParams.embeds[0].description = "Relay ratelimited";
+        break;
+
+      case 100:
+        disconnectedParams.embeds[0].description = "Relay is already connected";
+        break;
+
+      case 200:
+        disconnectedParams.embeds[0].description = "Too many connections";
+        break;
+
+      case 300:
+        disconnectedParams.embeds[0].description = "Relay kicked too many times";
+        break;
+
+      case 9999:
+        disconnectedParams.embeds[0].description = "Relay was spamming too many messages. (or something else)";
+
+      default:
+        if(!disconnectData.joinErr) break;
+
+        disconnectedParams.embeds[0].description = `undefined if joinErr call: ${disconnectData.joinErr}`;
+    };
+
+    switch(disconnectData.transportDisconnectReason) {
+      case "io client disconnect":
+        disconnectedParams.embeds[0].description = "Relay was disconnected by client";
+        break;
+
+      case "io server disconnect":
+        disconnectedParams.embeds[0].description = "Relay was disconnected by server";
+        break;
+
+      case "transport close":
+        disconnectedParams.embeds[0].description = "Relay was disconnected due to a transport close";
+        break;
+
+      case "transport error":
+        disconnectedParams.embeds[0].description = "Relay was disconnected due to a transport error";
+        break;
+
+      case "ping timeout":
+        disconnectedParams.embeds[0].description = "Relay was disconnected due to a ping timeout";
+        break;
+
+      default:
+        if(!disconnectData.transportDisconnectReason) break;
+
+        disconnectedParams.embeds[0].description = `undefined transport disconnect reason: ${disconnectData.transportDisconnectReason}`;
+    };
+
+    send(disconnectedParams);
+  });
+
+  client.on("chooseWord", () => {
+    client.disconnect();
+  });
+
+  client.on("playerJoin", (userJoin) => {
+    send({
+      username: "Skribbl-Relay",
+      embeds: [{
+        title: "System",
+        description: `**${userJoin.name}** joined the room!`,
+        color: 65280,
+        footer: {
+          text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
+        }
+      }]
+    });
+  });
+
+  client.on("playerLeave", ({player, reason}) => {
+        const message = {
             username: "Skribbl-Relay",
             embeds: [{
                 title: "System",
-                description: `Relay connected`,
-                color: 65280,
+                description: "",
+                color: 16711680,
                 footer: {
                     text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
                 }
             }]
-        }
-
-        send(connectedParams);
-
-        console.log(`Connected to ${client.lobbyId}\nOnline Players: ${client.players.length}`);
-    })
-
-    client.on("votekick", (data) => {
-        var params = {
-            username: "Skribbl-Relay",
-            embeds: [{
-                title: "System",
-                description: `${data.voter.name} is voting to kick ${data.votee.name} (${data.currentVotes}/${data.requiredVotes})`,
-                color: 14863104
-            }]
-        }
-        send(params);
-    })
-
-    client.on("disconnect", (disconnectData) => {
-            console.log(disconnectData);
-            clearInterval(i);
-
-            setTimeout(() => {
-                main();
-            }, 5000)
-
-            if(disconnectData.reason === 1) {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Relay kicked`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            }
-
-            if(disconnectData.reason === 2) {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Relay banned`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            }
-
-            if(disconnectData.joinErr === 1) {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Room not found`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            } else if(disconnectData.joinErr === 2) {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Room is full`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            } else if(disconnectData.joinErr === 3) {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Relay on kick cooldown`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            } else if(disconnectData.joinErr === 4) {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Relay banned`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            } else if(disconnectData.joinErr === 5) {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Relay ratelimited`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            } else if(disconnectData.joinErr === 100) {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Relay is already connected`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            } else if(disconnectData.joinErr === 200) {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Too many connections`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            } else if(disconnectData.joinErr === 300) {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Relay kicked too many times`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            } else {
-                if(typeof disconnectData.joinErr === undefined) return;
-                if(disconnectData.joinErr === undefined) return;
-
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Undefined if joinErr call: ${disconnectData.joinErr}`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            }
-
-            if(disconnectData.transportDisconnectReason === 'io client disconnect') {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Relay was disconnected by client`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            }
-
-            if(disconnectData.transportDisconnectReason === 'io server disconnect') {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Relay was disconnected by server`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            }
-
-            if(disconnectData.transportDisconnectReason === 'transport close') {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Relay was disconnected due to a transport close`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            }
-
-            if(disconnectData.transportDisconnectReason === 'transport error') {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Relay was disconnected due to a transport error`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            }
-
-            if(disconnectData.transportDisconnectReason === 'ping timeout') {
-                var disconnectedParams = {
-                        username: "Skribbl-Relay",
-                        embeds: [{
-                            title: "System",
-                            description: `Relay was disconnected due to a ping timeout`,
-                            color: 16711680
-                        }]
-                    }
-                send(disconnectedParams);
-            }
-     });
-
-    client.on("chooseWord", (word) => {
-        client.sendMessage(`I am a relay bot, logging chat to discord, I can't draw, here's the word: ${word[0]}`)
-
-        setTimeout(() => {
-            client.selectWord(word[0]);
-        }, 1500)
-    });
-
-    client.on("chooseWord", (word) => {
-        client.sendMessage(`I am a relay bot, logging chat to discord, I can't draw, here's the word: ${word[0]}`)
-
-        setTimeout(() => {
-            client.selectWord(word[0]);
-        }, 1500)
-    });
-
-    client.on("playerJoin", (userJoin) => {
-        var params = {
-            username: "Skribbl-Relay",
-            embeds: [{
-                title: "System",
-                description: `**${userJoin.name}** joined the room!`,
-                color: 65280,
-                footer: {
-                    text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
-                }
-            }]
-        }
-        send(params);
-    })
-
-    client.on("playerLeave", (userLeave) => {
-        if (userLeave.reason === 0) {
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "System",
-                    description: `**${userLeave.player.name}** left the room!`,
-                    color: 16711680,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
-                    }
-                }]
-            }
-            send(params);
-        }
-
-        if (userLeave.reason === 1) {
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "System",
-                    description: `**${userLeave.player.name}** has been kicked.`,
-                    color: 16711680,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
-                    }
-                }]
-            }
-            send(params);
-        }
-
-        if (userLeave.reason === 2) {
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "System",
-                    description: `**${userLeave.player.name}** has been banned.`,
-                    color: 16711680,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relayy`
-                    }
-                }]
-            }
-            send(params);
-        }
-    })
-
-    client.on("newOwner", (userHost) => {
-        var params = {
-            username: "Skribbl-Relay",
-            embeds: [{
-                title: "System",
-                description: `**${userHost.player.name}** is now the new host.`,
-                color: 16754756,
-                footer: {
-                    text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                }
-            }]
-        }
-        send(params);
-    })
-
-    // packet logging for id 11
-    client.on("packet", (packetData) => {
-        if (packetData.id != 11) return;
-
-        if (client.state === 0) {
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "System",
-                    description: `Waiting For Players`,
-                    color: 16754756,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
-                    }
-                }]
-            }
-            send(params);
-
-            // fix bug where text stays green even when nobody is drawing anymore
-            client.currentDrawer = null;
-        }
-
-        if (client.state === 1) {
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "System",
-                    description: `Game starting in a few seconds`,
-                    color: 16754756,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                    }
-                }]
-            }
-            send(params);
-        }
-
-        if (client.state === 3) {
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "System",
-                    description: `**${client.currentDrawer?.name || "N/A"}** is choosing a word!`,
-                    color: 16754756,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                    }
-                }]
-            }
-            send(params);
-        }
-
-        if (client.state === 4) {
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "System",
-                    description: `**${client.currentDrawer?.name || "N/A"}** is drawing now!`,
-                    color: 3765710,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                    }
-                }]
-            }
-            send(params);
-        }
-
-        if (client.state === 5) {
-            client.currentDrawer = null;
-        }
-
-        if (client.state === 7) {
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "System",
-                    description: `Waiting for the game to start`,
-                    color: 16754756,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                    }
-                }]
-            }
-            send(params);
-
-            client.currentDrawer = null;
-        }
-
-        if (packetData.data.data.reason === 1) {
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "System",
-                    description: `Time is up!\nThe word was '**${packetData.data.data.word}**'`,
-                    color: 65280,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                    }
-                }]
-            }
-            send(params);
-        }
-
-        if (packetData.data.data.reason === 0) {
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "System",
-                    description: `The word was '**${packetData.data.data.word}**'\nEveryone guessed the word!`,
-                    color: 65280,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                    }
-                }]
-            }
-            send(params);
-        }
-
-        if (packetData.data.id === 6) {
-            if(client.round === 0) return;
-
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "System",
-                    description: `Round **${client.round}** has ended`,
-                    color: 16711680,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                    }
-                }]
-            }
-            send(params);
-        }
-    })
-
-    client.on("startError", (gameStartErr) => {
-        if (gameStartErr === 0) {
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "System",
-                    description: `The host needs atleast **2** players to start the game`,
-                    color: 16711680,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
-                    }
-                }]
-            }
-            send(params);
-        }
-
-        if (gameStartErr === 100) {
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "System",
-                    description: `The server will be restarting soon`,
-                    color: 16711680,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                    }
-                }]
-            }
-            send(params);
-        }
-    })
-
-    client.on("playerGuessed", (userGuess) => {
-        var params = {
-            username: "Skribbl-Relay",
-            embeds: [{
-                title: "System",
-                description: `**${userGuess.player.name}** guessed the word!`,
-                color: 65280,
-                footer: {
-                    text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                }
-            }]
-        }
-        send(params);
-    })
-
-    client.on("hintRevealed", () => {
-        var params = {
-            username: "Skribbl-Relay",
-            embeds: [{
-                title: "System",
-                description: `A Hint was Revealed!`,
-                color: 16754756,
-                footer: {
-                    text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                }
-            }]
-        }
-        send(params);
-    })
-
-    client.on("roundStart", () => {
-        var params = {
-            username: "Skribbl-Relay",
-            embeds: [{
-                title: "System",
-                description: `Round **${client.round}** has started`,
-                color: 65280,
-                footer: {
-                    text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                }
-            }]
-        }
-        send(params);
-    })
-
-
-    client.on("vote", (userVote) => {
-        if (userVote.vote === 1) {
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "System",
-                    description: `**${userVote.player.name}** liked the drawing!`,
-                    color: 65280,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                    }
-                }]
-            }
-            send(params);
-        }
-
-        if (userVote.vote === 0) {
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "System",
-                    description: `**${userVote.player.name}** disliked the drawing!`,
-                    color: 16711680,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                    }
-                }]
-            }
-            send(params);
-        }
-    })
-
-    client.on("text", (relay) => {
-        if (relay.player.name === client.options.name) return;
-
-        if (relay.msg.includes("@everyone") || relay.msg.includes("@here")) return;
-
-        if (relay.msg.includes('@') || relay.msg.includes("<") || relay.msg.includes(">")) return;
-
-        if (relay.player.guessed === false) {
-            if (relay.player.name === client.currentDrawer?.name) {
-                var params = {
-                    username: "Skribbl-Relay",
-                    embeds: [{
-                        title: "Chat",
-                        description: `**${relay.player.name}**: ${relay.msg}`,
-                        color: 8236351, // Color for drawer
-                        footer: {
-                            text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                        }
-                    }]
-                }
-                send(params);
-            } else {
-                var params = {
-                    username: "Skribbl-Relay",
-                    embeds: [{
-                        title: "Chat",
-                        description: `**${relay.player.name}**: ${relay.msg}`,
-                        color: 16777215, // Default color
-                        footer: {
-                            text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                        }
-                    }]
-                }
-                send(params);
-            }
         };
 
-        if (relay.player.guessed === true) {
-            var params = {
-                username: "Skribbl-Relay",
-                embeds: [{
-                    title: "Chat",
-                    description: `**${relay.player.name}**: ${relay.msg}`,
-                    color: 8236351,
-                    footer: {
-                        text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
-                    }
-                }]
-            }
+        switch(reason) {
+            case 0:
+                message.embeds[0].description = `**${player.name}** left the room!`;
+                break;
 
-            send(params);
-        };
+            case 1:
+                message.embeds[0].description = `**${player.name}** has been kicked.`;
+                break;
+
+            case 2:
+                message.embeds[0].description = `**${player.name}** has been banned.`;
+                break;
+        }
+
+        send(message);
+  });
+
+  client.on("newOwner", ({player}) => {
+    send({
+      username: "Skribbl-Relay",
+      embeds: [{
+        title: "System",
+        description: `**${player.name}** is now the new host.`,
+        color: 16754756,
+        footer: {
+          text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
+        }
+      }]
     });
+  });
+
+  // packet logging for id 11
+  client.on("packet", ({id, data}) => {
+    if (id != 11) return;
+
+    const message = {
+      username: "Skribbl-Relay",
+      embeds: [{
+        title: "System",
+        description: "",
+        color: 16754756,
+        footer: {
+          text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
+        }
+      }]
+    }
+
+    switch(client.state) {
+      case 0:
+        message.embeds[0].description = "Waiting For Players";
+        client.currentDrawer = null;
+        break;
+
+      case 1:
+        message.embeds[0].description = "Game starting in a few seconds";
+        break;
+
+      case 3:
+        message.embeds[0].description = `**${client.currentDrawer?.name ?? "N/A"}** is choosing a word!`;
+        break;
+
+      case 4:
+        message.embeds[0].description = `**${client.currentDrawer?.name ?? "N/A"}** is drawing now!`;
+        message.embeds[0].color = 3765710;
+        break;
+
+      case 5:
+        client.currentDrawer = null;
+        break;
+
+      case 7:
+        message.embeds[0].description = 'Waiting for the game to start';
+        break;
+    }
+
+    switch(data.data.reason) {
+      case 0:
+        message.embeds[0].description = `The word was '**${data.data.word}**'\nEveryone guessed the word!`;
+        message.embeds[0].color = 65280;
+        break;
+
+      case 1:
+        message.embeds[0].description = `Time is up!\nThe word was '**${data.data.word}**'`;
+        message.embeds[0].color = 65280;
+        break;
+    }
+
+    if (data.id === 6 && client.round !== 0) {
+      message.embeds[0].description = `Round **${client.round}** has ended`;
+      message.embeds[0].color = 16711680;
+    }
+
+    send(message);
+  })
+
+  client.on("startError", (gameStartErr) => {
+    send({
+      username: "Skribbl-Relay",
+      embeds: [{
+        title: "System",
+        description: gameStartErr === 0 ? "The host needs atleast **2** players to start the game" : "The server will be restarting soon",
+        color: 16711680,
+        footer: {
+          text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`
+        }
+      }]
+    });
+  })
+
+  client.on("playerGuessed", ({player}) => {
+    send({
+      username: "Skribbl-Relay",
+      embeds: [{
+        title: "System",
+        description: `**${player.name}** guessed the word!`,
+        color: 65280,
+        footer: {
+          text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
+        }
+      }]
+    });
+  })
+
+  client.on("hintRevealed", () => {
+    send({
+      username: "Skribbl-Relay",
+      embeds: [{
+        title: "System",
+        description: `A Hint was Revealed!`,
+        color: 16754756,
+        footer: {
+          text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
+        }
+      }]
+    });
+  })
+
+  client.on("roundStart", () => {
+    send({
+      username: "Skribbl-Relay",
+      embeds: [{
+        title: "System",
+        description: `Round **${client.round}** has started`,
+        color: 65280,
+        footer: {
+          text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
+        }
+      }]
+    });
+  });
+
+  client.on("vote", ({player, vote}) => {
+    send({
+      username: "Skribbl-Relay",
+      embeds: [{
+        title: "System",
+        description: `**${player.name}** ${vote === 0 ? "disliked" : "liked"} the drawing!`,
+        color: 65280,
+        footer: {
+          text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
+        }
+      }]
+    });
+  });
+
+  client.on("text", ({player, msg}) => {
+    if(player.name === client.options.name) return;
+
+    const didGuess = player.name === client.currentDrawer?.name || player.guessed;
+
+    send({
+      username: "Skribbl-Relay",
+      embeds: [{
+        title: "Chat",
+        description: `**${player.name}**: ${msg}`,
+        color: didGuess ? 8236351 : 16777215,
+        footer: {
+          text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`
+        }
+      }]
+    });
+  });
 }
 
 main();
 
 function send(params) {
-    fetch(URL, {
-        method: "POST",
-        headers: {
-            'Content-type': 'application/json'
-        },
-        body: JSON.stringify(params)
-    }).catch(function(error) {
-        let fetchErr = error.toString();
-
-        if (fetchErr.includes("Failed to parse URL from undefined")) {
-            console.log("You must include a URL in the .env file.");
-            process.exit(0);
-        } else {
-            console.log(fetchErr);
-        }
-    })
+  fetch(URL, {
+    method: "POST",
+    headers: {
+      'Content-type': 'application/json'
+    },
+    body: JSON.stringify(params)
+  }).catch((error) => console.error);
 }
