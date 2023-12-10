@@ -16,6 +16,9 @@ send({
       title: "System",
       description: "Relay started",
       color: 65280,
+      footer: {
+        text: "Skribbl-Relay",
+      },
     },
   ],
 });
@@ -34,7 +37,7 @@ function main() {
           description: "Relay connected",
           color: 65280,
           footer: {
-            text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`,
+            text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Round: ${client.round} - Skribbl-Relay`,
           },
         },
       ],
@@ -46,12 +49,14 @@ function main() {
   });
 
   client.on("votekick", ({ voter, votee, currentVotes, requiredVotes }) => {
+    if (currentVotes > requiredVotes) currentVotes = requriedVotes;
+
     send({
       username: "Skribbl-Relay",
       embeds: [
         {
           title: "System",
-          description: `${voter.name} is voting to kick ${votee.name} (${currentVotes}/${requiredVotes})`,
+          description: `**${voter.name}** is voting to kick **${votee.name}** (${currentVotes}/${requiredVotes})`,
           color: 14863104,
           footer: {
             text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`,
@@ -75,6 +80,9 @@ function main() {
           title: "System",
           description: "",
           color: 16711680,
+          footer: {
+            text: "Skribbl-Relay",
+          },
         },
       ],
     };
@@ -163,17 +171,19 @@ function main() {
     send(disconnectedParams);
   });
 
-  client.on("chooseWord", () => {
-    client.disconnect();
-  });
-
   client.on("playerJoin", (userJoin) => {
     send({
       username: "Skribbl-Relay",
       embeds: [
         {
           title: "System",
-          description: `**${userJoin.name}** joined the room!`,
+          description: `**${userJoin.name}** joined the room!
+
+                __**User Information**__
+                ➸ User ID: ${userJoin.id}
+                ➸ Total Score: ${userJoin.score}
+                ➸ Flag(s): ${userJoin.flags}
+                `,
           color: 65280,
           footer: {
             text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`,
@@ -198,17 +208,37 @@ function main() {
       ],
     };
 
+    if (client.players.length < 3) client.disconnect();
+
     switch (reason) {
       case 0:
-        message.embeds[0].description = `**${player.name}** left the room!`;
+        message.embeds[0].description = `**${player.name}** left the room!
+
+                __**User Information**__
+                ➸ User ID: ${player.id}
+                ➸ Total Score: ${player.score}
+                ➸ Flag(s): ${player.flags}
+                `;
         break;
 
       case 1:
-        message.embeds[0].description = `**${player.name}** has been kicked.`;
+        message.embeds[0].description = `**${player.name}** has been kicked.
+
+                __**User Information**__
+                ➸ User ID: ${player.id}
+                ➸ Total Score: ${player.score}
+                ➸ Flag(s): ${player.flags}
+                `;
         break;
 
       case 2:
-        message.embeds[0].description = `**${player.name}** has been banned.`;
+        message.embeds[0].description = `**${player.name}** has been banned.
+
+                __**User Information**__
+                ➸ User ID: ${player.id}
+                ➸ Total Score: ${player.score}
+                ➸ Flag(s): ${player.flags}
+                `;
         break;
     }
 
@@ -234,10 +264,7 @@ function main() {
     });
   });
 
-  // packet logging for id 11
-  client.on("packet", ({ id, data }) => {
-    if (id != 11) return;
-
+  client.on("stateUpdate", (data) => {
     const message = {
       username: "Skribbl-Relay",
       embeds: [
@@ -255,7 +282,7 @@ function main() {
       ],
     };
 
-    switch (client.state) {
+    switch (data.state) {
       case 0:
         message.embeds[0].description = "Waiting for players";
         client.currentDrawer = null;
@@ -265,8 +292,16 @@ function main() {
         message.embeds[0].description = "Game starting in a few seconds";
         break;
 
+      case 2:
+        message.embeds[0].description = `Round **${client.round}** has started`;
+        message.embeds[0].color = 65280;
+        break;
+
       case 3:
-        if (client.options.name === client.currentDrawer?.name) break;
+        if (client.options.name === data.drawer?.name) {
+          client.disconnect();
+          break;
+        }
 
         message.embeds[0].description = `**${
           client.currentDrawer?.name ?? "N/A"
@@ -276,7 +311,10 @@ function main() {
         break;
 
       case 4:
-        if (client.options.name === client.currentDrawer?.name) break;
+        if (client.options.name === data.drawer?.name) {
+          client.disconnect();
+          break;
+        }
 
         message.embeds[0].description = `**${
           client.currentDrawer?.name ?? "N/A"
@@ -286,24 +324,51 @@ function main() {
         break;
 
       case 5:
-        switch (data.data.reason) {
+        let drawResultsMsg = "";
+
+        switch (data.reason) {
           case 0:
-            message.embeds[0].description = `The word was '**${data.data.word}**'\nEveryone guessed the word!`;
+            message.embeds[0].description = `Everyone guessed the word!\n➸ '**${data.word}**'`;
+            message.embeds[0].color = 65280;
             break;
 
           case 1:
-            message.embeds[0].description = `Time is up!\nThe word was '**${data.data.word}**'`;
+            message.embeds[0].description = `Time's up!\n➸ '**${data.word}**'`;
             message.embeds[0].thumbnail.url =
               "https://skribbl.io/img/setting_2.gif";
+            message.embeds[0].color = 65280;
             break;
 
           case 2:
-            message.embeds[0].description = `The drawer left the game!\nThe word was '**${data.data.word}**'`;
+            message.embeds[0].description = `The drawer left the game!\n➸ '**${data.word}**'`;
+            message.embeds[0].color = 65280;
             break;
         }
 
-        message.embeds[0].color = 65280;
+        for (const player in data.newScores) {
+          if (data.newScores[player] > 0) {
+            drawResultsMsg += `**${player}**: ${data.newScores[player]}\n`;
+          }
+        }
+
+        message.embeds[0].thumbnail.url = "https://skribbl.io/img/crown.gif";
+        message.embeds[0].description = `The drawing results are in!\n\n${drawResultsMsg}`;
+        message.embeds[0].color = 16754756;
+
         client.currentDrawer = null;
+        break;
+
+      case 6:
+        let leaderboardMsg = "";
+
+        for (const index in data.leaderboard) {
+          const player = data.leaderboard[index];
+
+          leaderboardMsg += `**${player.name}**: ${player.score}\n`;
+        }
+
+        message.embeds[0].thumbnail.url = "https://skribbl.io/img/trophy.gif";
+        message.embeds[0].description = `The game results are in!\n\n${leaderboardMsg}`;
         break;
 
       case 7:
@@ -325,7 +390,7 @@ function main() {
           description:
             gameStartErr === 0
               ? "The host needs atleast **2** players to start the game"
-              : "The server will be restarting soon",
+              : `The server will be restarting in ${gameStartErr.time}`,
           color: 16711680,
           footer: {
             text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`,
@@ -357,29 +422,16 @@ function main() {
       embeds: [
         {
           title: "System",
-          description: `A hint was revealed!`,
+          description: `A hint was revealed!\n➸ '**${client.word.replace(
+            /_/g,
+            "_",
+          )}**'`,
           color: 16754756,
           footer: {
             text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`,
           },
           thumbnail: {
             url: "https://skribbl.io/img/setting_5.gif",
-          },
-        },
-      ],
-    });
-  });
-
-  client.on("roundStart", () => {
-    send({
-      username: "Skribbl-Relay",
-      embeds: [
-        {
-          title: "System",
-          description: `Round **${client.round}** has started`,
-          color: 65280,
-          footer: {
-            text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`,
           },
         },
       ],
@@ -444,5 +496,5 @@ function send(params) {
       "Content-type": "application/json",
     },
     body: JSON.stringify(params),
-  }).catch((error) => console.error);
+  }).catch((error) => console.error(error));
 }
