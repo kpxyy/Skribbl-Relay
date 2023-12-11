@@ -35,7 +35,7 @@ function main() {
         {
           title: "System",
           description: "Relay connected",
-          color: 65280,
+          color: 5688871,
           footer: {
             text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Round: ${client.round} - Skribbl-Relay`,
           },
@@ -90,49 +90,61 @@ function main() {
     switch (disconnectData.reason) {
       case 1:
         disconnectedParams.embeds[0].description = "Relay kicked";
+        send(disconnectedParams);
         break;
 
       case 2:
         disconnectedParams.embeds[0].description = "Relay banned";
+        send(disconnectedParams);
+        break;
     }
 
     switch (disconnectData.joinErr) {
       case 1:
         disconnectedParams.embeds[0].description = "Room not found";
+        send(disconnectedParams);
         break;
 
       case 2:
         disconnectedParams.embeds[0].description = "Room is full";
+        send(disconnectedParams);
         break;
 
       case 3:
         disconnectedParams.embeds[0].description = "Relay on kick cooldown";
+        send(disconnectedParams);
         break;
 
       case 4:
         disconnectedParams.embeds[0].description = "Relay banned";
+        send(disconnectedParams);
         break;
 
       case 5:
         disconnectedParams.embeds[0].description = "Relay ratelimited";
+        send(disconnectedParams);
         break;
 
       case 100:
         disconnectedParams.embeds[0].description = "Relay is already connected";
+        send(disconnectedParams);
         break;
 
       case 200:
         disconnectedParams.embeds[0].description = "Too many connections";
+        send(disconnectedParams);
         break;
 
       case 300:
         disconnectedParams.embeds[0].description =
           "Relay kicked too many times";
+        send(disconnectedParams);
         break;
 
       case 9999:
         disconnectedParams.embeds[0].description =
           "Relay was spamming too many messages.";
+        send(disconnectedParams);
         break;
 
       default:
@@ -184,7 +196,7 @@ function main() {
                 ➸ Total Score: ${userJoin.score}
                 ➸ Flag(s): ${userJoin.flags}
                 `,
-          color: 65280,
+          color: 5688871,
           footer: {
             text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`,
           },
@@ -200,7 +212,7 @@ function main() {
         {
           title: "System",
           description: "",
-          color: 16711680,
+          color: 13520650,
           footer: {
             text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`,
           },
@@ -329,19 +341,22 @@ function main() {
         switch (data.reason) {
           case 0:
             message.embeds[0].description = `Everyone guessed the word!\n➸ '**${data.word}**'`;
-            message.embeds[0].color = 65280;
+            message.embeds[0].color = 5688871;
+            send(message);
             break;
 
           case 1:
             message.embeds[0].description = `Time's up!\n➸ '**${data.word}**'`;
             message.embeds[0].thumbnail.url =
               "https://skribbl.io/img/setting_2.gif";
-            message.embeds[0].color = 65280;
+            message.embeds[0].color = 5688871;
+            send(message);
             break;
 
           case 2:
             message.embeds[0].description = `The drawer left the game!\n➸ '**${data.word}**'`;
-            message.embeds[0].color = 65280;
+            message.embeds[0].color = 5688871;
+            send(message);
             break;
         }
 
@@ -369,6 +384,7 @@ function main() {
 
         message.embeds[0].thumbnail.url = "https://skribbl.io/img/trophy.gif";
         message.embeds[0].description = `The game results are in!\n\n${leaderboardMsg}`;
+        message.embeds[0].color = 16754756;
         break;
 
       case 7:
@@ -378,7 +394,13 @@ function main() {
 
     if (message.embeds[0].description === "") return;
 
-    send(message);
+    if (data.state === 6) {
+      setTimeout(() => {
+        send(message);
+      }, 1000);
+    } else {
+      send(message);
+    }
   });
 
   client.on("startError", (gameStartErr) => {
@@ -391,7 +413,7 @@ function main() {
             gameStartErr === 0
               ? "The host needs atleast **2** players to start the game"
               : `The server will be restarting in ${gameStartErr.time}`,
-          color: 16711680,
+          color: 13520650,
           footer: {
             text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Skribbl-Relay`,
           },
@@ -407,7 +429,7 @@ function main() {
         {
           title: "System",
           description: `**${player.name}** guessed the word!`,
-          color: 65280,
+          color: 5688871,
           footer: {
             text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`,
           },
@@ -424,7 +446,7 @@ function main() {
           title: "System",
           description: `A hint was revealed!\n➸ '**${client.word.replace(
             /_/g,
-            "_",
+            "﹍",
           )}**'`,
           color: 16754756,
           footer: {
@@ -447,7 +469,7 @@ function main() {
           description: `**${player.name}** ${
             vote === 0 ? "disliked" : "liked"
           } the drawing!`,
-          color: vote === 0 ? 16711680 : 65280,
+          color: vote === 0 ? 13520650 : 5688871,
           footer: {
             text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`,
           },
