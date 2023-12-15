@@ -34,10 +34,26 @@ function main() {
       embeds: [
         {
           title: "System",
-          description: "Relay connected",
+          description: `Relay connected
+
+        __**Server Information**__
+                ➸ Lobby ID: ${client.lobbyId}
+                ➸ Online Players: ${client.players.length}
+                ➸ Current Round: ${client.round}
+        ➸ Lobby Type: ${client.lobbyType === 0 ? "Public" : "Private"}
+        ➸ Current Drawer: ${client.currentDrawer?.name ?? "N/A"}
+
+        __**Server Settings**__
+        ➸ Language: ${client.settings.language}
+        ➸ Max Players: ${client.settings.maxPlayers}
+        ➸ Max Draw Time: ${client.settings.maxDrawTime}
+        ➸ Max Rounds: ${client.settings.maxRounds}
+        ➸ Max Hints: ${client.settings.maxHints}
+        ➸ Custom Words: ${client.settings.useCustomWords}
+        `,
           color: 5688871,
           footer: {
-            text: `Lobby ID: ${client.lobbyId} - Online Players: ${client.players.length} - Round: ${client.round} - Skribbl-Relay`,
+            text: `Lobby ID: ${client.lobbyId} - Skribbl-Relay`,
           },
         },
       ],
@@ -366,6 +382,8 @@ function main() {
           }
         }
 
+        if (!drawResultsMsg) break;
+        
         message.embeds[0].thumbnail.url = "https://skribbl.io/img/crown.gif";
         message.embeds[0].description = `The drawing results are in!\n\n${drawResultsMsg}`;
         message.embeds[0].color = 16754756;
@@ -382,9 +400,13 @@ function main() {
           leaderboardMsg += `**${player.name}**: ${player.score}\n`;
         }
 
+        if (!leaderboardMsg) break;
+
         message.embeds[0].thumbnail.url = "https://skribbl.io/img/trophy.gif";
         message.embeds[0].description = `The game results are in!\n\n${leaderboardMsg}`;
         message.embeds[0].color = 16754756;
+
+        client.currentDrawer = null;
         break;
 
       case 7:
@@ -394,13 +416,7 @@ function main() {
 
     if (message.embeds[0].description === "") return;
 
-    if (data.state === 6) {
-      setTimeout(() => {
-        send(message);
-      }, 1000);
-    } else {
-      send(message);
-    }
+    send(message);
   });
 
   client.on("startError", (gameStartErr) => {
