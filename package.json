@@ -1,14 +1,17 @@
 {
   "name": "skribbl-relay",
   "version": "2.1.2",
-  "description": "",
+  "description": "A skribbl.io chat relay.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": [
+      "w0ahL",
+      "MrDiamond64"
+  ],
+  "license": "GPL-3.0",
   "dependencies": {
     "dotenv": "^16.3.1",
     "skribbler": "^2.4.0"
