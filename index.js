@@ -25,7 +25,7 @@ send({
 
 function main() {
   const client = new Client({
-    name: "܂ցց᜵pegwU7PNxx",
+    name: "Skribbl Relay",
   });
 
   client.on("connect", () => {
@@ -37,9 +37,9 @@ function main() {
           description: `Relay connected
 
         __**Server Information**__
-                ➸ Lobby ID: ${client.lobbyId}
-                ➸ Online Players: ${client.players.length}
-                ➸ Current Round: ${client.round}
+        ➸ Lobby ID: ${client.lobbyId}
+        ➸ Online Players: ${client.players.length}
+        ➸ Current Round: ${client.round}
         ➸ Lobby Type: ${client.lobbyType === 0 ? "Public" : "Private"}
         ➸ Current Drawer: ${client.currentDrawer?.name ?? "N/A"}
 
@@ -59,9 +59,7 @@ function main() {
       ],
     });
 
-    console.log(
-      `Connected to ${client.lobbyId}\nOnline Players: ${client.players.length}`,
-    );
+    console.log(`Connected to ${client.lobbyId}\nOnline Players: ${client.players.length}`);
   });
 
   client.on("votekick", ({ voter, votee, currentVotes, requiredVotes }) => {
@@ -83,8 +81,6 @@ function main() {
   });
 
   client.on("disconnect", (disconnectData) => {
-    console.log(disconnectData);
-
     setTimeout(() => {
       main();
     }, 1660);
@@ -377,9 +373,7 @@ function main() {
         }
 
         for (const player in data.newScores) {
-          if (data.newScores[player] > 0) {
-            drawResultsMsg += `**${player}**: ${data.newScores[player]}\n`;
-          }
+          if (data.newScores[player] > 0) drawResultsMsg += `**${player}**: ${data.newScores[player]}\n`;
         }
 
         if (!drawResultsMsg) break;
