@@ -63,7 +63,7 @@ function main() {
   });
 
   client.on("votekick", ({ voter, votee, currentVotes, requiredVotes }) => {
-    if (currentVotes > requiredVotes) currentVotes = requriedVotes;
+    if (currentVotes > requiredVotes) currentVotes = requiredVotes;
 
     send({
       username: "Skribbl-Relay",
